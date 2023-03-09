@@ -1,21 +1,21 @@
-import { GetStaticPaths, GetStaticProps } from 'next';
+import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from 'next';
 import path from 'path';
 import { FC } from 'react';
 import fs from 'fs';
 import matter from 'gray-matter';
+import { ParsedUrlQuery } from 'querystring';
+import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
+import { serialize } from 'next-mdx-remote/serialize';
 
-interface Props {
-  post: {
-    title: string;
-    content: string;
-  };
-}
 
-const SinglePage: FC<Props> = (props): JSX.Element => {
+type Props = InferGetStaticPropsType<typeof getStaticProps>
+
+const SinglePage: FC<Props> = ({ post }): JSX.Element => {
+    const {title, content} = post
   return (
-    <div>
-      <h1>{props.post.title}</h1>
-      <p>{props.post.content}</p>
+    <div className='max-w-3xl mx-auto'>
+      <h1>{title}</h1>
+          <MDXRemote {...content} />
     </div>
   );
 };
@@ -39,22 +39,34 @@ export const getStaticPaths: GetStaticPaths = () => {
     fallback: false,
   };
 };
+  
+type Post = {
+  post: {
+    title: string;
+    content: MDXRemoteSerializeResult;
+  };
+};
 
-export const getStaticProps: GetStaticProps = (context) => {
-  console.log(context);
+interface IStatisProps extends ParsedUrlQuery {
+    postSlug : string
+}
+
+export const getStaticProps: GetStaticProps<Post> = async (context) => {
   const { params } = context;
-  const { postSlug } = params as any;
+  const { postSlug } = params as IStatisProps;
 
   const filePathToRead = path.join(process.cwd(), `posts/${postSlug}.md`);
   const fileContent = fs.readFileSync(filePathToRead, { encoding: 'utf-8' });
 
-  const { content, data } = matter(fileContent);
+    //const { content, data } = matter(fileContent);
+    
+    const  compiledSource : any = await serialize(fileContent, { parseFrontmatter: true });
 
   return {
     props: {
       post: {
-        content,
-        title: data.title,
+        content: compiledSource,
+        title: compiledSource.frontmatter.title,
       },
     },
   };
