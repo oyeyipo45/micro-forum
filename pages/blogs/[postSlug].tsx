@@ -6,6 +6,7 @@ import matter from 'gray-matter';
 import { ParsedUrlQuery } from 'querystring';
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { serialize } from 'next-mdx-remote/serialize';
+import Link from 'next/link';
 
 
 type Props = InferGetStaticPropsType<typeof getStaticProps>
@@ -14,8 +15,13 @@ const SinglePage: FC<Props> = ({ post }): JSX.Element => {
     const {title, content} = post
   return (
     <div className='max-w-3xl mx-auto'>
-      <h1>{title}</h1>
-          <MDXRemote {...content} />
+      <button className='bg-indigo-600 py-2 px-3 mt-3 rounded text-white hover:bg-indigo-500'>
+        <Link href="/blogs">Home</Link>
+      </button>
+      <h1 className='font-semibold text-2xl py-5'>{title}</h1>
+      <div className='prose pb-20'>
+        <MDXRemote {...content} />
+      </div>
     </div>
   );
 };
