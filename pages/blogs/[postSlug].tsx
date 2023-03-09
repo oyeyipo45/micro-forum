@@ -42,7 +42,7 @@ export const getStaticPaths: GetStaticPaths = () => {
 
   return {
     paths,
-    fallback: false,
+    fallback: 'blocking',
   };
 };
   
@@ -58,24 +58,30 @@ interface IStatisProps extends ParsedUrlQuery {
 }
 
 export const getStaticProps: GetStaticProps<Post> = async (context) => {
-  const { params } = context;
-  const { postSlug } = params as IStatisProps;
+  try {
+    const { params } = context;
+    const { postSlug } = params as IStatisProps;
 
-  const filePathToRead = path.join(process.cwd(), `posts/${postSlug}.md`);
-  const fileContent = fs.readFileSync(filePathToRead, { encoding: 'utf-8' });
+    const filePathToRead = path.join(process.cwd(), `posts/${postSlug}.md`);
+    const fileContent = fs.readFileSync(filePathToRead, { encoding: 'utf-8' });
 
     //const { content, data } = matter(fileContent);
-    
-    const  compiledSource : any = await serialize(fileContent, { parseFrontmatter: true });
 
-  return {
-    props: {
-      post: {
-        content: compiledSource,
-        title: compiledSource.frontmatter.title,
+    const compiledSource: any = await serialize(fileContent, { parseFrontmatter: true });
+
+    return {
+      props: {
+        post: {
+          content: compiledSource,
+          title: compiledSource.frontmatter.title,
+        },
       },
-    },
-  };
+    };
+  } catch (error) {
+      return {
+        notFound : true
+    }
+  }
 };
 
 export default SinglePage;
